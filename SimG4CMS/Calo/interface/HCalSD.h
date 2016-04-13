@@ -33,9 +33,9 @@ class G4Material;
 class G4Step;
 
 class HCalSD : public CaloSD, public Observer<const BeginOfJob *> {
-
-public:    
-
+  
+public:
+  
   HCalSD(G4String , const DDCompactView &, const SensitiveDetectorCatalog &,
          edm::ParameterSet const &, const SimTrackManager*);
   virtual ~HCalSD();
@@ -43,17 +43,17 @@ public:
   virtual double                getEnergyDeposit(G4Step* );
   virtual uint32_t              setDetUnitId(G4Step* step);
   void                          setNumberingScheme(HcalNumberingScheme* );
-
+  
 protected:
-
+  
   virtual void                  update(const BeginOfJob *);
   virtual void                  initRun();
   virtual bool                  filterHit(CaloG4Hit*, double);
-
-private:    
-
+  
+private:
+  
   uint32_t                      setDetUnitId(int, const G4ThreeVector&, int, int);
-  std::vector<double>           getDDDArray(const std::string&, 
+  std::vector<double>           getDDDArray(const std::string&,
                                             const DDsvalues_type&);
   std::vector<G4String>         getNames(DDFilteredView&);
   bool                          isItHF(G4Step *);
@@ -73,11 +73,11 @@ private:
   int                           setTrackID(G4Step * step);
   void                          readWeightFromFile(std::string);
   double                        layerWeight(int, const G4ThreeVector&, int, int);
-  void                          plotProfile(G4Step* step, const G4ThreeVector& pos, 
+  void                          plotProfile(G4Step* step, const G4ThreeVector& pos,
                                             double edep, double time, int id);
   void                          plotHF(G4ThreeVector& pos, bool emType);
   void                          modifyDepth(HcalNumberingFromDDD::HcalID& id);
-
+  
   HcalDDDSimConstants*          hcalConstants;
   HcalNumberingFromDDD*         numberingFromDDD;
   HcalNumberingScheme*          numberingScheme;
@@ -101,7 +101,7 @@ private:
   std::vector<G4LogicalVolume*> hfLV, fibreLV, pmtLV, fibre1LV, fibre2LV;
   std::map<uint32_t,double>     layerWeights;
   TH1F                          *hit_[9], *time_[9], *dist_[9], *hzvem, *hzvhad;
-
+  
 };
 
 #endif // HCalSD_h

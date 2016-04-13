@@ -11,8 +11,6 @@
 #include "DataFormats/HcalDetId/interface/HcalZDCDetId.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "DataFormats/HcalDetId/interface/HcalGenericDetId.h"
-#include "DataFormats/HcalDetId/interface/HcalSubdetector.h"
-#include "DataFormats/HcalDetId/interface/HcalTrigTowerDetId.h"
 #include "CalibCalorimetry/HcalAlgos/interface/HcalDbHardcode.h"
 
 #include "CondFormats/DataRecord/interface/HcalAllRcds.h"
@@ -24,132 +22,119 @@
 
 #include "HcalHardcodeCalibrations.h"
 
-//#define DebugLog
-
 // class decleration
 //
 
 using namespace cms;
 
 namespace {
-
+  
   std::vector<HcalGenericDetId> allCells (const HcalTopology& hcaltopology) {
     static std::vector<HcalGenericDetId> result;
     int maxDepthHB=hcaltopology.maxDepthHB();
     int maxDepthHE=hcaltopology.maxDepthHE();
-
-#ifdef DebugLog
-    std::cout << std::endl << "HcalHardcodeCalibrations:   maxDepthHB, maxDepthHE = " 
-	      <<  maxDepthHB << ", " <<  maxDepthHE << std::endl;
-#endif
-
+    
+    /*
+     std::cout << std::endl << "HcalHardcodeCalibrations:   maxDepthHB, maxDepthHE = "
+	    <<  maxDepthHB << ", " <<  maxDepthHE << std::endl;
+     */
+    
     if (result.size () <= 0) {
-      for (int eta = -HcalDetId::kHcalEtaMask2; 
-           eta <= HcalDetId::kHcalEtaMask2; eta++) {
-        for (int phi = 0; phi <= HcalDetId::kHcalPhiMask2; phi++) {
+      for (int eta = -50; eta < 50; eta++) {
+        for (int phi = 0; phi < 100; phi++) {
           for (int depth = 1; depth < maxDepthHB + maxDepthHE; depth++) {
-            for (int det = 1; det <= HcalForward; det++) {
-	      HcalDetId cell ((HcalSubdetector) det, eta, phi, depth);
-	      if (hcaltopology.valid(cell)) {
-		result.push_back (cell);
-#ifdef DebugLog
-		std::cout << " HcalHardcodedCalibrations: det|eta|phi|depth = "
-			  << det << "|" << eta << "|" << phi << "|"
-			  << depth << std::endl;  
-#endif
-	      }
-	    }
-	  }
-	}
-      } 
+            for (int det = 1; det < 5; det++) {
+              HcalDetId cell ((HcalSubdetector) det, eta, phi, depth);
+              if (hcaltopology.valid(cell)) result.push_back (cell);
+              
+              /*
+               if (hcaltopology.valid(cell))
+               std::cout << " HcalHardcodedCalibrations: det, eta, phi, depth = "
+               << det << ",  " << eta << ", " << phi << " , "
+               << depth << std::endl;
+               */
+            }
+          }
+        }
+      }
       ZdcTopology zdctopology;
       HcalZDCDetId zcell;
       HcalZDCDetId::Section section  = HcalZDCDetId::EM;
       for(int depth= 1; depth < 6; depth++){
-	zcell = HcalZDCDetId(section, true, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);
-	zcell = HcalZDCDetId(section, false, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);     
+        zcell = HcalZDCDetId(section, true, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
+        zcell = HcalZDCDetId(section, false, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
       }
       section = HcalZDCDetId::HAD;
       for(int depth= 1; depth < 5; depth++){
-	zcell = HcalZDCDetId(section, true, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);
-	zcell = HcalZDCDetId(section, false, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);     
+        zcell = HcalZDCDetId(section, true, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
+        zcell = HcalZDCDetId(section, false, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
       }
       section = HcalZDCDetId::LUM;
       for(int depth= 1; depth < 3; depth++){
-	zcell = HcalZDCDetId(section, true, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);
-	zcell = HcalZDCDetId(section, false, depth);
-	if(zdctopology.valid(zcell)) result.push_back(zcell);     
+        zcell = HcalZDCDetId(section, true, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
+        zcell = HcalZDCDetId(section, false, depth);
+        if(zdctopology.valid(zcell)) result.push_back(zcell);
       }
-
-      // HcalGenTriggerTower (HcalGenericSubdetector = 5) 
+      
+      // HcalGenTriggerTower (HcalGenericSubdetector = 5)
       // NASTY HACK !!!
-      // - As no valid(cell) check found for HcalTrigTowerDetId 
+      // - As no valid(cell) check found for HcalTrigTowerDetId
       // to create HT cells (ieta=1-28, iphi=1-72)&(ieta=29-32, iphi=1,5,... 69)
-
-      for (int vers=0; vers<=HcalTrigTowerDetId::kHcalVersMask; ++vers) {
-        for (int depth=0; depth<=HcalTrigTowerDetId::kHcalDepthMask; ++depth) {
-          for (int eta = -HcalTrigTowerDetId::kHcalEtaMask; 
-               eta <= HcalTrigTowerDetId::kHcalEtaMask; eta++) {
-            for (int phi = 1; phi <= HcalTrigTowerDetId::kHcalPhiMask; phi++) {
-              HcalTrigTowerDetId cell(eta, phi,depth,vers); 
-              if (hcaltopology.validHT(cell)) {
-		result.push_back (cell);
-#ifdef DebugLog
-		std::cout << " HcalHardcodedCalibrations: eta|phi|depth|vers = "
-			  << eta << "|" << phi << "|" << depth << "|" << vers
-			  << std::endl;  
-#endif
-	      }
-	    }
-	  }
-	}
+      
+      for (int eta = -32; eta <= 32; eta++) {
+        if(abs(eta) <= 28 && (eta != 0)) {
+          for (int phi = 1; phi <= 72; phi++) {
+            HcalTrigTowerDetId cell(eta, phi);
+            result.push_back (cell);
+          }
+        }
+        else if (abs(eta) > 28) {
+          for (int phi = 1; phi <= 69;) {
+            HcalTrigTowerDetId cell(eta, phi);
+            result.push_back (cell);
+            phi += 4;
+          }
+        }
       }
     }
     return result;
   }
-
+  
 }
 
-HcalHardcodeCalibrations::HcalHardcodeCalibrations ( const edm::ParameterSet& iConfig ): 
-	he_recalibration(0), hf_recalibration(0), setHEdsegm(false), setHBdsegm(false), SipmLumi(0.0), testHFQIE10(iConfig.getParameter<bool>("testHFQIE10"))
-{
+HcalHardcodeCalibrations::HcalHardcodeCalibrations ( const edm::ParameterSet& iConfig ): he_recalibration(0), hf_recalibration(0), setHEdsegm(false), setHBdsegm(false), SipmLumi(0.0) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::HcalHardcodeCalibrations->...";
-
-  if ( iConfig.exists("GainWidthsForTrigPrims") ) 
+  
+  if ( iConfig.exists("GainWidthsForTrigPrims") )
     switchGainWidthsForTrigPrims = iConfig.getParameter<bool>("GainWidthsForTrigPrims");
   else  switchGainWidthsForTrigPrims = false;
-       
-
+  
+  
   // HE and HF recalibration preparation
   iLumi = 0.;
   if ( iConfig.exists("iLumi") )
     iLumi=iConfig.getParameter<double>("iLumi");
-
+  
   if( iLumi > 0.0 ) {
     bool he_recalib = iConfig.getParameter<bool>("HERecalibration");
     bool hf_recalib = iConfig.getParameter<bool>("HFRecalibration");
     if(he_recalib) {
-      double cutoff = iConfig.getParameter<double>("HEreCalibCutoff"); 
+      double cutoff = iConfig.getParameter<double>("HEreCalibCutoff");
       he_recalibration = new HERecalibration(iLumi,cutoff);
     }
-    if(hf_recalib)  hf_recalibration = new HFRecalibration();
+    if(hf_recalib)  hf_recalibration = new HFRecalibration(iConfig.getParameter<edm::ParameterSet>("HFRecalParameterBlock"));
     
-#ifdef DebugLog
     std::cout << " HcalHardcodeCalibrations:  iLumi = " <<  iLumi << std::endl;
-#endif
   }
-
+  
   std::vector <std::string> toGet = iConfig.getUntrackedParameter <std::vector <std::string> > ("toGet");
   for(std::vector <std::string>::iterator objectName = toGet.begin(); objectName != toGet.end(); ++objectName ) {
     bool all = *objectName == "all";
-#ifdef DebugLog
-    std::cout << "Load parameters for " << *objectName << std::endl;
-#endif
     if ((*objectName == "Pedestals") || all) {
       setWhatProduced (this, &HcalHardcodeCalibrations::producePedestals);
       findingRecord <HcalPedestalsRcd> ();
@@ -169,10 +154,6 @@ HcalHardcodeCalibrations::HcalHardcodeCalibrations ( const edm::ParameterSet& iC
     if ((*objectName == "QIEData") || all) {
       setWhatProduced (this, &HcalHardcodeCalibrations::produceQIEData);
       findingRecord <HcalQIEDataRcd> ();
-    }
-    if ((*objectName == "QIETypes") || all) {
-      setWhatProduced (this, &HcalHardcodeCalibrations::produceQIETypes);
-      findingRecord <HcalQIETypesRcd> ();
     }
     if ((*objectName == "ChannelQuality") || (*objectName == "channelQuality") || all) {
       setWhatProduced (this, &HcalHardcodeCalibrations::produceChannelQuality);
@@ -263,7 +244,7 @@ HcalHardcodeCalibrations::~HcalHardcodeCalibrations()
 //
 // member functions
 //
-void 
+void
 HcalHardcodeCalibrations::setIntervalFor( const edm::eventsetup::EventSetupRecordKey& iKey, const edm::IOVSyncValue& iTime, edm::ValidityInterval& oInterval ) {
   std::string record = iKey.name ();
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::setIntervalFor-> key: " << record << " time: " << iTime.eventID() << '/' << iTime.time ().value ();
@@ -275,7 +256,7 @@ std::auto_ptr<HcalPedestals> HcalHardcodeCalibrations::producePedestals (const H
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalPedestals> result (new HcalPedestals (topo,false));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -290,7 +271,7 @@ std::auto_ptr<HcalPedestalWidths> HcalHardcodeCalibrations::producePedestalWidth
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalPedestalWidths> result (new HcalPedestalWidths (topo,false));
   std::vector <HcalGenericDetId> cells = allCells(*htopo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -305,7 +286,7 @@ std::auto_ptr<HcalGains> HcalHardcodeCalibrations::produceGains (const HcalGains
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalGains> result (new HcalGains (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -320,12 +301,12 @@ std::auto_ptr<HcalGainWidths> HcalHardcodeCalibrations::produceGainWidths (const
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalGainWidths> result (new HcalGainWidths (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
-    // for Upgrade - include TrigPrims, for regular case - only HcalDetId 
+    
+    // for Upgrade - include TrigPrims, for regular case - only HcalDetId
     if(switchGainWidthsForTrigPrims) {
       HcalGainWidth item = HcalDbHardcode::makeGainWidth (*cell);
       result->addValues(item);
@@ -339,16 +320,16 @@ std::auto_ptr<HcalGainWidths> HcalHardcodeCalibrations::produceGainWidths (const
 
 std::auto_ptr<HcalQIEData> HcalHardcodeCalibrations::produceQIEData (const HcalQIEDataRcd& rcd) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceQIEData-> ...";
-
+  
   /*
-  std::cout << std::endl << ">>>  HcalHardcodeCalibrations::produceQIEData"
-	    << std::endl;  
-  */
-
+   std::cout << std::endl << ">>>  HcalHardcodeCalibrations::produceQIEData"
+   << std::endl;
+   */
+  
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalQIEData> result (new HcalQIEData (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -358,27 +339,12 @@ std::auto_ptr<HcalQIEData> HcalHardcodeCalibrations::produceQIEData (const HcalQ
   return result;
 }
 
-std::auto_ptr<HcalQIETypes> HcalHardcodeCalibrations::produceQIETypes (const HcalQIETypesRcd& rcd) {
-  edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceQIETypes-> ...";
-  edm::ESHandle<HcalTopology> htopo;
-  rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
-  const HcalTopology* topo=&(*htopo);
-
-    std::auto_ptr<HcalQIETypes> result (new HcalQIETypes (topo));
-  std::vector <HcalGenericDetId> cells = allCells(*topo);
-  for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-    HcalQIEType item = HcalDbHardcode::makeQIEType(*cell,testHFQIE10);
-    result->addValues(item);
-  }
-  return result;
-}
-
 std::auto_ptr<HcalChannelQuality> HcalHardcodeCalibrations::produceChannelQuality (const HcalChannelQualityRcd& rcd) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceChannelQuality-> ...";
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalChannelQuality> result (new HcalChannelQuality (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -394,9 +360,9 @@ std::auto_ptr<HcalRespCorrs> HcalHardcodeCalibrations::produceRespCorrs (const H
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
- 
+  
   //set depth segmentation for HB/HE recalib - only happens once
-//  if((he_recalibration && !setHEdsegm) || (hb_recalibration && !setHBdsegm)){
+  //  if((he_recalibration && !setHEdsegm) || (hb_recalibration && !setHBdsegm)){
   if((he_recalibration && !setHEdsegm)) {
     std::vector<std::vector<int>> m_segmentation;
     int maxEta = topo->lastHERing();
@@ -409,45 +375,45 @@ std::auto_ptr<HcalRespCorrs> HcalHardcodeCalibrations::produceRespCorrs (const H
       setHEdsegm = true;
     }
     /*
-    if(hb_recalibration && !setHBdsegm){
-      hb_recalibration->setDsegm(m_segmentation);
-      setHBdsegm = true;
-    }
-    */
+     if(hb_recalibration && !setHBdsegm){
+     hb_recalibration->setDsegm(m_segmentation);
+     setHBdsegm = true;
+     }
+     */
   }
- 
+  
   std::auto_ptr<HcalRespCorrs> result (new HcalRespCorrs (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
-    double corr = 1.0; 
-
-    if ((he_recalibration != 0 ) && 
-	((*cell).genericSubdet() == HcalGenericDetId::HcalGenEndcap)) {
+    
+    double corr = 1.0;
+    
+    if ((he_recalibration != 0 ) &&
+        ((*cell).genericSubdet() == HcalGenericDetId::HcalGenEndcap)) {
       
       int depth_ = HcalDetId(*cell).depth();
       int ieta_  = HcalDetId(*cell).ieta();
-      corr = he_recalibration->getCorr(ieta_, depth_); 
+      corr = he_recalibration->getCorr(ieta_, depth_);
       
       /*
-	std::cout << "HE ieta, depth = " << ieta_  << ",  " << depth_  
-	<< "   corr = "  << corr << std::endl;
-      */
-
+       std::cout << "HE ieta, depth = " << ieta_  << ",  " << depth_
+       << "   corr = "  << corr << std::endl;
+       */
+      
     }
-    else if ((hf_recalibration != 0 ) && 
-	((*cell).genericSubdet() == HcalGenericDetId::HcalGenForward)) {   
+    else if ((hf_recalibration != 0 ) &&
+             ((*cell).genericSubdet() == HcalGenericDetId::HcalGenForward)) {
       int depth_ = HcalDetId(*cell).depth();
       int ieta_  = HcalDetId(*cell).ieta();
-      corr = hf_recalibration->getCorr(ieta_, depth_, iLumi); 
-
-      /*
-	std::cout << "HF ieta, depth = " << ieta_  << ",  " << depth_  
-	<< "   corr = "  << corr << std::endl;
-      */
-
+      corr = hf_recalibration->getCorr(ieta_, depth_, iLumi);
+      
+      
+      std::cout << "HF ieta, depth = " << ieta_  << ",  " << depth_
+      << "   corr = "  << corr << std::endl;
+      
+      
     }
-
+    
     HcalRespCorr item(cell->rawId(),corr);
     result->addValues(item);
   }
@@ -459,7 +425,7 @@ std::auto_ptr<HcalLUTCorrs> HcalHardcodeCalibrations::produceLUTCorrs (const Hca
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalLUTCorrs> result (new HcalLUTCorrs (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -474,7 +440,7 @@ std::auto_ptr<HcalPFCorrs> HcalHardcodeCalibrations::producePFCorrs (const HcalP
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalPFCorrs> result (new HcalPFCorrs (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -489,7 +455,7 @@ std::auto_ptr<HcalTimeCorrs> HcalHardcodeCalibrations::produceTimeCorrs (const H
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalTimeCorrs> result (new HcalTimeCorrs (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -504,7 +470,7 @@ std::auto_ptr<HcalZSThresholds> HcalHardcodeCalibrations::produceZSThresholds (c
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalZSThresholds> result (new HcalZSThresholds (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -520,7 +486,7 @@ std::auto_ptr<HcalL1TriggerObjects> HcalHardcodeCalibrations::produceL1TriggerOb
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalL1TriggerObjects> result (new HcalL1TriggerObjects (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -538,7 +504,7 @@ std::auto_ptr<HcalL1TriggerObjects> HcalHardcodeCalibrations::produceL1TriggerOb
 
 std::auto_ptr<HcalElectronicsMap> HcalHardcodeCalibrations::produceElectronicsMap (const HcalElectronicsMapRcd& rcd) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceElectronicsMap-> ...";
-
+  
   std::auto_ptr<HcalElectronicsMap> result (new HcalElectronicsMap ());
   HcalDbHardcode::makeHardcodeMap(*result);
   return result;
@@ -549,7 +515,7 @@ std::auto_ptr<HcalValidationCorrs> HcalHardcodeCalibrations::produceValidationCo
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalValidationCorrs> result (new HcalValidationCorrs (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -564,25 +530,25 @@ std::auto_ptr<HcalLutMetadata> HcalHardcodeCalibrations::produceLutMetadata (con
   edm::ESHandle<HcalTopology> htopo;
   rcd.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalLutMetadata> result (new HcalLutMetadata (topo));
-
+  
   result->setRctLsb( 0.5 );
   result->setNominalGain(0.003333);  // for HBHE SiPMs
-
+  
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
+    
     /*
-    if (cell->isHcalTrigTowerDetId()) {
-      HcalTrigTowerDetId ht = HcalTrigTowerDetId(*cell);
-      int ieta = ht.ieta();
-      int iphi = ht.iphi();
-      std::cout << " HcalTrigTower cell (ieta,iphi) = " 
-	       <<  ieta << ",  " << iphi << std::endl;
-    }
-    */
-
+     if (cell->isHcalTrigTowerDetId()) {
+     HcalTrigTowerDetId ht = HcalTrigTowerDetId(*cell);
+     int ieta = ht.ieta();
+     int iphi = ht.iphi();
+     std::cout << " HcalTrigTower cell (ieta,iphi) = "
+     <<  ieta << ",  " << iphi << std::endl;
+     }
+     */
+    
     HcalLutMetadatum item(cell->rawId(),1.0,1,1);
     result->addValues(item);
   }
@@ -590,8 +556,8 @@ std::auto_ptr<HcalLutMetadata> HcalHardcodeCalibrations::produceLutMetadata (con
   return result;
 }
 
-std::auto_ptr<HcalDcsValues> 
-  HcalHardcodeCalibrations::produceDcsValues (const HcalDcsRcd& rcd) {
+std::auto_ptr<HcalDcsValues>
+HcalHardcodeCalibrations::produceDcsValues (const HcalDcsRcd& rcd) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceDcsValues-> ...";
   std::auto_ptr<HcalDcsValues> result(new HcalDcsValues);
   return result;
@@ -599,7 +565,7 @@ std::auto_ptr<HcalDcsValues>
 
 std::auto_ptr<HcalDcsMap> HcalHardcodeCalibrations::produceDcsMap (const HcalDcsMapRcd& rcd) {
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceDcsMap-> ...";
-
+  
   std::auto_ptr<HcalDcsMap> result (new HcalDcsMap ());
   HcalDbHardcode::makeHardcodeDcsMap(*result);
   return result;
@@ -610,7 +576,7 @@ std::auto_ptr<HcalRecoParams> HcalHardcodeCalibrations::produceRecoParams (const
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalRecoParams> result (new HcalRecoParams (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -624,7 +590,7 @@ std::auto_ptr<HcalTimingParams> HcalHardcodeCalibrations::produceTimingParams (c
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalTimingParams> result (new HcalTimingParams (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -638,23 +604,23 @@ std::auto_ptr<HcalLongRecoParams> HcalHardcodeCalibrations::produceLongRecoParam
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalLongRecoParams> result (new HcalLongRecoParams (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
-  std::vector <unsigned int> mSignal; 
-  mSignal.push_back(4); 
-  mSignal.push_back(5); 
+  std::vector <unsigned int> mSignal;
+  mSignal.push_back(4);
+  mSignal.push_back(5);
   mSignal.push_back(6);
-  std::vector <unsigned int> mNoise;  
-  mNoise.push_back(1);  
-  mNoise.push_back(2);  
+  std::vector <unsigned int> mNoise;
+  mNoise.push_back(1);
+  mNoise.push_back(2);
   mNoise.push_back(3);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
     if (cell->isHcalZDCDetId())
-      {
-	HcalLongRecoParam item(cell->rawId(),mSignal,mNoise);
-	result->addValues(item);
-      }
+    {
+      HcalLongRecoParam item(cell->rawId(),mSignal,mNoise);
+      result->addValues(item);
+    }
   }
   return result;
 }
@@ -664,7 +630,7 @@ std::auto_ptr<HcalZDCLowGainFractions> HcalHardcodeCalibrations::produceZDCLowGa
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalZDCLowGainFractions> result (new HcalZDCLowGainFractions (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
@@ -675,10 +641,10 @@ std::auto_ptr<HcalZDCLowGainFractions> HcalHardcodeCalibrations::produceZDCLowGa
 }
 
 std::auto_ptr<HcalMCParams> HcalHardcodeCalibrations::produceMCParams (const HcalMCParamsRcd& rec) {
-
-
+  
+  
   //  std::cout << std::endl << " .... HcalHardcodeCalibrations::produceMCParams ->"<< std::endl;
-
+  
   edm::LogInfo("HCAL") << "HcalHardcodeCalibrations::produceMCParams-> ...";
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
@@ -686,7 +652,7 @@ std::auto_ptr<HcalMCParams> HcalHardcodeCalibrations::produceMCParams (const Hca
   std::auto_ptr<HcalMCParams> result (new HcalMCParams (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
+    
     //    HcalMCParam item(cell->rawId(),0);
     HcalMCParam item = HcalDbHardcode::makeMCParam (*cell);
     result->addValues(item);
@@ -700,7 +666,7 @@ std::auto_ptr<HcalFlagHFDigiTimeParams> HcalHardcodeCalibrations::produceFlagHFD
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
-
+  
   std::auto_ptr<HcalFlagHFDigiTimeParams> result (new HcalFlagHFDigiTimeParams (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   
@@ -708,69 +674,55 @@ std::auto_ptr<HcalFlagHFDigiTimeParams> HcalHardcodeCalibrations::produceFlagHFD
   coef.push_back(0.93);
   coef.push_back(-0.38275);
   coef.push_back(-0.012667);
-
+  
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
     HcalFlagHFDigiTimeParam item(cell->rawId(),
-				 1, //firstsample
-				 3, // samplestoadd
-				 2, //expectedpeak
-				 40., // min energy threshold
-				 coef // coefficients
-				 );
+                                 1, //firstsample
+                                 3, // samplestoadd
+                                 2, //expectedpeak
+                                 40., // min energy threshold
+                                 coef // coefficients
+                                 );
     result->addValues(item);
   }
   return result;
-} 
+}
 
 
 std::auto_ptr<HcalCholeskyMatrices> HcalHardcodeCalibrations::produceCholeskyMatrices (const HcalCholeskyMatricesRcd& rec) {
-
+  
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
   std::auto_ptr<HcalCholeskyMatrices> result (new HcalCholeskyMatrices (topo));
-
+  
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
+    
     int sub = cell->genericSubdet();
-
-    if (sub == HcalGenericDetId::HcalGenBarrel  || 
+    
+    if (sub == HcalGenericDetId::HcalGenBarrel  ||
         sub == HcalGenericDetId::HcalGenEndcap  ||
-	sub == HcalGenericDetId::HcalGenOuter   ||
-	sub == HcalGenericDetId::HcalGenForward  ) {
+        sub == HcalGenericDetId::HcalGenOuter   ||
+        sub == HcalGenericDetId::HcalGenForward  ) {
       HcalCholeskyMatrix item(cell->rawId());
       result->addValues(item);
     }
   }
   return result;
-
+  
 }
 std::auto_ptr<HcalCovarianceMatrices> HcalHardcodeCalibrations::produceCovarianceMatrices (const HcalCovarianceMatricesRcd& rec) {
-
+  
   edm::ESHandle<HcalTopology> htopo;
   rec.getRecord<HcalRecNumberingRecord>().get(htopo);
   const HcalTopology* topo=&(*htopo);
   std::auto_ptr<HcalCovarianceMatrices> result (new HcalCovarianceMatrices (topo));
   std::vector <HcalGenericDetId> cells = allCells(*topo);
   for (std::vector <HcalGenericDetId>::const_iterator cell = cells.begin (); cell != cells.end (); ++cell) {
-
+    
     HcalCovarianceMatrix item(cell->rawId());
     result->addValues(item);
   }
   return result;
-}
-
-void HcalHardcodeCalibrations::fillDescriptions(edm::ConfigurationDescriptions & descriptions){
-	edm::ParameterSetDescription desc;
-	desc.add<double>("iLumi",-1.);
-	desc.add<bool>("HERecalibration",false);
-	desc.add<double>("HEreCalibCutoff",20.);
-	desc.add<bool>("HFRecalibration",false);
-	desc.add<bool>("GainWidthsForTrigPrims",false);
-	desc.add<bool>("testHFQIE10",false);
-	desc.addUntracked<std::vector<std::string>>("toGet",std::vector<std::string>());
-	desc.addUntracked<bool>("fromDDD",false);
-	
-	descriptions.addDefault(desc);
 }
